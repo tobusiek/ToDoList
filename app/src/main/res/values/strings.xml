@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">TO-DO</string>
+    <string name="task_name">Nazwa zadania:</string>
+    <string name="task_date">Data zadania:</string>
+    <string name="task_category">Kategoria:</string>
+    <string name="task_hint">Podaj nazwę zadania</string>
+    <string name="add_fab_desc">Dodaj zadanie</string>
+    <string name="save_fab_desc">Zapisz zadanie</string>
+    <string name="date_sample">01-01-2021</string>
+    <string name="empty_list">Brak zadań do wykonania</string>
+    <string name="category_icon">Kategoria</string>
+
+    <string-array name="Categories">
+        <item>Praca</item>
+        <item>Zakupy</item>
+        <item>Inne</item>
+    </string-array>
+</resources>
