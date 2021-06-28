@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TO-DO</string>
+    <string name="app_name">To-Do</string>
     <string name="task_name">Nazwa zadania:</string>
     <string name="task_date">Data zadania:</string>
     <string name="task_category">Kategoria:</string>

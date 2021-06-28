@@ -8,7 +8,6 @@ import androidx.room.Room;
 
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -19,14 +18,19 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
-import eLeader.to_do.databinding.ActivityTaskBinding;
+import eLeader.to_do.Database.DBPosition;
+import eLeader.to_do.Database.TasksDatabase;
+import eLeader.to_do.databinding.ActivityEditTaskBinding;
 
-public class TaskActivity extends AppCompatActivity {
-    private ActivityTaskBinding binding;
+public class EditTaskActivity extends AppCompatActivity {
+    private ActivityEditTaskBinding binding;
 
     private TasksDatabase db;
+    private Intent intent;
 
     private DatePickerDialog datePickerDialog;
     private Button dateButton;
@@ -34,24 +38,29 @@ public class TaskActivity extends AppCompatActivity {
     private String taskDate;
     private String taskCat;
 
-    public TaskActivity() {}
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityTaskBinding.inflate(getLayoutInflater());
+        binding = ActivityEditTaskBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle("Dodaj nowe zadanie");
+        actionBar.setTitle("Edytuj zadanie");
+
+        intent = getIntent();
 
         initDatePicker();
         dateButton = binding.taskDateButton;
-        dateButton.setText(getTodaysDate());
+        dateButton.setText(intent.getStringExtra("taskDate"));
+
+        binding.taskNameEditText.setText(intent.getStringExtra("taskName"));
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.Categories, android.R.layout.simple_dropdown_item_1line);
         binding.spinnerTaskCat.setAdapter(adapter);
+
+        List<String> categories = Arrays.asList(getResources().getStringArray(R.array.Categories));
+        binding.spinnerTaskCat.setSelection(categories.indexOf(intent.getStringExtra("taskCat")));
         binding.spinnerTaskCat.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -64,8 +73,7 @@ public class TaskActivity extends AppCompatActivity {
             }
         });
 
-        db = Room.databaseBuilder(getApplicationContext(), TasksDatabase.class,
-                TasksDatabase.DB_NAME).allowMainThreadQueries().build();
+        db = TasksDatabase.getInstance(getApplicationContext());
     }
 
     @Override
@@ -85,29 +93,30 @@ public class TaskActivity extends AppCompatActivity {
                 if (taskName.equals("") || taskDate.equals("") || taskCat.equals(""))
                     Toast.makeText(this, "Proszę wprowadzić wszystkie dane", Toast.LENGTH_LONG).show();
                 else {
-                    DBPosition dbPosition = new DBPosition();
+                    DBPosition dbPosition = db.positionDAO().getPositionById(intent.getIntExtra("id", 0));
                     dbPosition.setTask_name(taskName);
                     dbPosition.setTask_date(taskDate);
                     dbPosition.setTask_cat(taskCat);
-                    db.positionDAO().insert(dbPosition);
-                    int id = dbPosition.get_id();
+                    db.positionDAO().update(dbPosition);
 
-                    if (db.positionDAO().checkIfTaskAdded(id)) {
+                    if (!db.positionDAO().checkIfTaskEdited(dbPosition.get_id(), dbPosition.getTask_name()
+                            , dbPosition.task_date, dbPosition.getTask_cat())) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setMessage("Dodawanie zadania nie powiodło się. Czy chcesz spróbować dodać zadanie ponownie?");
-                        builder.setPositiveButton("Tak", (dialog, which) -> {});
-                        builder.setNegativeButton("Nie", (dialog, which) -> TaskActivity.this.finish());
+                        builder.setMessage("Edytowanie zadania nie powiodło się. Czy chcesz spróbować ponownie?");
+                        builder.setPositiveButton("Tak", (dialog, which) -> {
+                        });
+                        builder.setNegativeButton("Nie", (dialog, which) -> EditTaskActivity.this.finish());
 
                         AlertDialog dialog = builder.create();
                         dialog.show();
-                    } else TaskActivity.this.finish();
+                    } else EditTaskActivity.this.finish();
                 }
                 break;
 
             case R.id.cancelMenuItem:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Czy chcesz anulować dodawanie zadania?");
-                builder.setPositiveButton("Tak", (dialog, which) -> TaskActivity.this.finish());
+                builder.setMessage("Czy chcesz anulować edycję zadania?");
+                builder.setPositiveButton("Tak", (dialog, which) -> EditTaskActivity.this.finish());
                 builder.setNegativeButton("Nie", (dialog, which) -> {});
 
                 AlertDialog dialog = builder.create();
@@ -148,14 +157,5 @@ public class TaskActivity extends AppCompatActivity {
 
     public void openDatePicker(View view) {
         datePickerDialog.show();
-    }
-
-    public String getTodaysDate() {
-        Calendar cal = Calendar.getInstance();
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH) + 1;
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-
-        return makeDateString(day, month, year);
     }
 }

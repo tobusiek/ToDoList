@@ -1,4 +1,4 @@
-package eLeader.to_do;
+package eLeader.to_do.Database;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
